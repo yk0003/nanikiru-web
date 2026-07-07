@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { countLocations } from "@/lib/repo/locations";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 
 // Supabase接続ヘルスチェック。
@@ -41,11 +42,18 @@ export async function GET() {
       );
     }
 
+    // locationsテーブルの行数（フェーズ4のseed適用確認用。未適用ならnull）
+    const locationsCount = await countLocations();
+
     return NextResponse.json({
       ok: true,
       status: "connected",
       projectUrl: config.url,
-      message: "Supabaseに接続できています。",
+      locationsCount,
+      message:
+        locationsCount === null
+          ? "Supabaseに接続できています（locationsテーブルは未作成。mockで動作中）。"
+          : `Supabaseに接続できています。locations: ${locationsCount}件`,
     });
   } catch {
     return NextResponse.json(

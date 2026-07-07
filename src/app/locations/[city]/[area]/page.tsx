@@ -7,7 +7,8 @@ import { OutfitGrid } from "@/components/OutfitGrid";
 import { RelatedLocations } from "@/components/RelatedLocations";
 import { SeoTextBlock } from "@/components/SeoTextBlock";
 import { WeatherSummary } from "@/components/WeatherSummary";
-import { ADS, CITIES, buildOutfitSummary, getArea, getCity, postsByArea } from "@/lib/mock";
+import { ADS, CITIES, buildOutfitSummary, postsByArea } from "@/lib/mock";
+import { getAreaRepo, getCityRepo } from "@/lib/repo/locations";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import { getWeatherForArea } from "@/lib/weather";
 
@@ -25,8 +26,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { city: citySlug, area: areaSlug } = await params;
-  const city = getCity(citySlug);
-  const area = getArea(citySlug, areaSlug);
+  const city = await getCityRepo(citySlug); // DB優先・mockフォールバック
+  const area = await getAreaRepo(citySlug, areaSlug);
   if (!city || !area) return {};
 
   const weather = await getWeatherForArea(citySlug, areaSlug);
@@ -56,8 +57,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AreaPage({ params }: Props) {
   const { city: citySlug, area: areaSlug } = await params;
-  const city = getCity(citySlug);
-  const area = getArea(citySlug, areaSlug);
+  const city = await getCityRepo(citySlug); // DB優先・mockフォールバック
+  const area = await getAreaRepo(citySlug, areaSlug);
   if (!city || !area) notFound();
 
   // Open-Meteoの現在天気（エリア代表点。失敗時はモック）。服装メモもこの実データから生成される
