@@ -1,7 +1,7 @@
 "use client";
 
 import { CITIES, type FlatArea } from "@/lib/mock";
-import { WEATHER_KINDS } from "@/lib/types";
+import { WEATHER_KINDS, type Weather } from "@/lib/types";
 
 // 地図風パネル（本物の地図APIはフェーズ2でMapLibre等に置き換え）。
 // 都市ピン → タップでその都市のエリアピンに切り替わる2段階構成。
@@ -152,12 +152,15 @@ export function MapPreview({
   onSelectCity,
   onSelectArea,
   onBackToWorld,
+  weatherByCity,
 }: {
   selectedCitySlug: string | null;
   previewArea: FlatArea | null;
   onSelectCity: (citySlug: string) => void;
   onSelectArea: (citySlug: string, areaSlug: string) => void;
   onBackToWorld: () => void;
+  /** サーバー側で取得した都市別の現在天気（なければモック） */
+  weatherByCity?: Record<string, Weather>;
 }) {
   const city = CITIES.find((c) => c.slug === selectedCitySlug);
 
@@ -202,7 +205,7 @@ export function MapPreview({
       {!city
         ? CITIES.map((c) => {
             const pos = CITY_POS[c.slug] ?? { x: 50, y: 50 };
-            const kind = WEATHER_KINDS[c.weather.kind];
+            const kind = WEATHER_KINDS[(weatherByCity?.[c.slug] ?? c.weather).kind];
             return (
               <button
                 key={c.slug}

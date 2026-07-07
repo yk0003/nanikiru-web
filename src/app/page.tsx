@@ -4,18 +4,25 @@ import { LocationCards } from "@/components/LocationCards";
 import { PostGrid } from "@/components/PostGrid";
 import { WeatherHero } from "@/components/WeatherHero";
 import { CITIES, POSTS } from "@/lib/mock";
+import { getCityWeatherMap, getWeatherForArea } from "@/lib/weather";
 
 // トップ = 「今日の天気 + 現地の服装フィード」が主役。
 // PC: ヒーローに地図風プレビューを置き、「天候・場所・服装のアプリ」だと一目で伝える。
 // スマホ: 地図は大きく出さず、フィードの後に小さな「地図で探す」導線カードを置く。
-export default function HomePage() {
+// 天気はOpen-Meteoの現在値（30分キャッシュ）。取得失敗時はモックにfallback。
+export default async function HomePage() {
+  const [shibuyaWeather, cityWeathers] = await Promise.all([
+    getWeatherForArea("tokyo", "shibuya"),
+    getCityWeatherMap(),
+  ]);
+
   return (
     <div className="space-y-8">
       {/* ヒーロー: PCは2カラム（左=コピー+天気、右=地図風プレビュー）、スマホは左カラムのみ */}
       <section className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        <WeatherHero />
+        <WeatherHero weather={shibuyaWeather} source={shibuyaWeather.source} />
         <div className="hidden lg:block">
-          <HeroMapPreview />
+          <HeroMapPreview weatherByCity={cityWeathers} />
         </div>
       </section>
 

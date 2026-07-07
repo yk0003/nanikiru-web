@@ -9,6 +9,7 @@ import { SeoTextBlock } from "@/components/SeoTextBlock";
 import { WeatherSummary } from "@/components/WeatherSummary";
 import { ADS, CITIES, buildOutfitSummary, getArea, getCity, postsByArea } from "@/lib/mock";
 import { breadcrumbJsonLd } from "@/lib/seo";
+import { getWeatherForArea } from "@/lib/weather";
 
 // エリアページ（SEO: 「渋谷 今日の服装」の着地ページ）
 // 構成: ヒーロー → 今日の服装メモ → フィルター+投稿グリッド（0件なら空状態+近くのエリア）
@@ -28,8 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const area = getArea(citySlug, areaSlug);
   if (!city || !area) return {};
 
+  const weather = await getWeatherForArea(citySlug, areaSlug);
   const title = `${area.name}の今日の服装`;
-  const description = `${area.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(city.weather.tempC)}℃・体感${Math.round(city.weather.feelsLikeC)}℃。${area.trend ?? "半袖で寒くないか、夜に羽織りが必要か"}を体感メモで確認できます。`;
+  const description = `${area.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(weather.tempC)}℃・体感${Math.round(weather.feelsLikeC)}℃。${area.trend ?? "半袖で寒くないか、夜に羽織りが必要か"}を体感メモで確認できます。`;
   const path = `/locations/${city.slug}/${area.slug}`;
 
   return {
@@ -58,8 +60,11 @@ export default async function AreaPage({ params }: Props) {
   const area = getArea(citySlug, areaSlug);
   if (!city || !area) notFound();
 
+  // Open-Meteoの現在天気（エリア代表点。失敗時はモック）。服装メモもこの実データから生成される
+  const weather = await getWeatherForArea(citySlug, areaSlug);
+
   const posts = postsByArea(citySlug, areaSlug);
-  const summary = buildOutfitSummary(area.name, city.weather, area.trend);
+  const summary = buildOutfitSummary(area.name, weather, area.trend);
   const lead =
     posts.length > 0 && area.trend
       ? `現地の投稿では、${area.trend}です。${summary.nightNote}。`
@@ -85,9 +90,10 @@ export default async function AreaPage({ params }: Props) {
 
       <LocationHero
         title={`${area.name}の今日の服装`}
-        weather={city.weather}
+        weather={weather}
         lead={lead}
         composeHref={`/compose?city=${citySlug}&area=${areaSlug}`}
+        source={weather.source}
       />
 
       <WeatherSummary summary={summary} />

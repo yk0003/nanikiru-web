@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { weatherAttribution, type WeatherSource } from "@/lib/weather";
 import { WEATHER_KINDS, type Weather } from "@/lib/types";
 
 // 都市・エリアページの上部ヒーロー。
@@ -11,12 +12,14 @@ export function LocationHero({
   lead,
   composeHref,
   composeLabel = "このエリアで投稿する",
+  source = "mock",
 }: {
   title: string;
   weather: Weather;
   lead: string;
   composeHref: string;
   composeLabel?: string;
+  source?: WeatherSource;
 }) {
   const kind = WEATHER_KINDS[weather.kind];
 
@@ -29,7 +32,8 @@ export function LocationHero({
         {kind.label}
       </p>
       <p className="mt-1 text-xs text-sub">
-        💨 風{Math.round(weather.windMps)}m/s ・ 💧 湿度{weather.humidity}%
+        💨 風{Math.round(weather.windMps)}m/s ・ 💧 湿度{weather.humidity}% ・{" "}
+        <span className="text-sub/80">{weatherAttribution(source)}</span>
       </p>
 
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-sub">{lead}</p>

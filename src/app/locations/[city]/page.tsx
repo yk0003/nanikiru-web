@@ -9,6 +9,7 @@ import { SeoTextBlock } from "@/components/SeoTextBlock";
 import { WeatherSummary } from "@/components/WeatherSummary";
 import { ADS, CITIES, buildOutfitSummary, getCity, postsByCity } from "@/lib/mock";
 import { breadcrumbJsonLd } from "@/lib/seo";
+import { getWeatherForCity } from "@/lib/weather";
 
 // 都市ページ（SEO: 「東京 今日の服装」の着地ページ）
 // 構成: ヒーロー → 今日の服装メモ → フィルター+投稿グリッド → SEOテキスト → 関連エリア → 広告
@@ -24,8 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const city = getCity(citySlug);
   if (!city) return {};
 
+  const weather = await getWeatherForCity(city.slug);
   const title = `${city.name}の今日の服装`;
-  const description = `${city.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(city.weather.tempC)}℃・体感${Math.round(city.weather.feelsLikeC)}℃。半袖で寒くないか、夜に羽織りが必要かを体感メモで確認できます。`;
+  const description = `${city.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(weather.tempC)}℃・体感${Math.round(weather.feelsLikeC)}℃。半袖で寒くないか、夜に羽織りが必要かを体感メモで確認できます。`;
   const path = `/locations/${city.slug}`;
 
   return {
@@ -53,9 +55,12 @@ export default async function CityPage({ params }: Props) {
   const city = getCity(citySlug);
   if (!city) notFound();
 
+  // Open-Meteoの現在天気（失敗時はモック）。服装メモもこの実データから生成される
+  const weather = await getWeatherForCity(city.slug);
+
   const posts = postsByCity(city.slug);
   const topTrend = city.areas.find((a) => a.trend)?.trend;
-  const summary = buildOutfitSummary(city.name, city.weather, topTrend);
+  const summary = buildOutfitSummary(city.name, weather, topTrend);
   const lead = topTrend
     ? `現地の投稿では、${topTrend}です。${summary.nightNote}。`
     : summary.memo;
@@ -74,10 +79,11 @@ export default async function CityPage({ params }: Props) {
 
       <LocationHero
         title={`${city.name}の今日の服装`}
-        weather={city.weather}
+        weather={weather}
         lead={lead}
         composeHref={`/compose?city=${city.slug}`}
         composeLabel="この都市で投稿する"
+        source={weather.source}
       />
 
       <WeatherSummary summary={summary} />

@@ -6,13 +6,19 @@ import { AreaCard } from "@/components/AreaCard";
 import { LocationSearch } from "@/components/LocationSearch";
 import { MapPreview } from "@/components/MapPreview";
 import { CITIES, TRAVEL_POPULAR_REFS, flattenAreas, type FlatArea } from "@/lib/mock";
+import type { Weather } from "@/lib/types";
 
 // 地図ページの本体。都市→エリアの2段階選択と、エリアプレビューの状態を持つ。
 // PC: 左に地図パネル / 右にプレビュー。スマホ: 縦積み。
 
 const TOKYO_POPULAR = ["shibuya", "shinjuku", "ginza", "omotesando", "nakameguro", "asakusa"];
 
-export function MapExplorer() {
+export function MapExplorer({
+  weatherByCity,
+}: {
+  /** サーバー側でOpen-Meteoから取得した都市別天気（なければモック） */
+  weatherByCity?: Record<string, Weather>;
+}) {
   const [citySlug, setCitySlug] = useState<string | null>(null);
   const [preview, setPreview] = useState<FlatArea | null>(null);
 
@@ -32,7 +38,8 @@ export function MapExplorer() {
   };
 
   const previewWeather = preview
-    ? (CITIES.find((c) => c.slug === preview.citySlug) ?? CITIES[0]).weather
+    ? (weatherByCity?.[preview.citySlug] ??
+      (CITIES.find((c) => c.slug === preview.citySlug) ?? CITIES[0]).weather)
     : null;
 
   const travelAreas = TRAVEL_POPULAR_REFS.map(([c, a]) =>
@@ -54,6 +61,7 @@ export function MapExplorer() {
             setCitySlug(null);
             setPreview(null);
           }}
+          weatherByCity={weatherByCity}
         />
 
         <div>

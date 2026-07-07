@@ -4,18 +4,24 @@ import Link from "next/link";
 import { useState } from "react";
 import { CITY_POS, MapBackdrop } from "@/components/MapPreview";
 import { CITIES } from "@/lib/mock";
-import { WEATHER_KINDS } from "@/lib/types";
+import { WEATHER_KINDS, type Weather } from "@/lib/types";
 
 // トップページ（PC）用の地図風プレビュー。
 // 都市ピンをタップすると、その都市の代表エリアのミニプレビューが出る。
 // フル機能の地図は /map（MapExplorer）に委ねる、あくまで「入口」のパネル。
 
-export function HeroMapPreview() {
+export function HeroMapPreview({
+  weatherByCity,
+}: {
+  /** サーバー側でOpen-Meteoから取得した都市別天気（なければモック） */
+  weatherByCity?: Record<string, Weather>;
+}) {
   const [citySlug, setCitySlug] = useState("tokyo");
 
   const city = CITIES.find((c) => c.slug === citySlug) ?? CITIES[0];
   const topArea = city.areas[0]; // 各都市の先頭 = 投稿数が最多のエリア
-  const kind = WEATHER_KINDS[city.weather.kind];
+  const weather = weatherByCity?.[city.slug] ?? city.weather;
+  const kind = WEATHER_KINDS[weather.kind];
 
   return (
     <div
@@ -74,7 +80,7 @@ export function HeroMapPreview() {
           <div className="min-w-0">
             <p className="truncate text-sm font-bold">📍 {topArea.displayName}</p>
             <p className="mt-0.5 text-xs text-sub">
-              {Math.round(city.weather.tempC)}℃ / 体感{Math.round(city.weather.feelsLikeC)}℃ ・{" "}
+              {Math.round(weather.tempC)}℃ / 体感{Math.round(weather.feelsLikeC)}℃ ・{" "}
               {kind.emoji} {kind.label}
             </p>
             {topArea.trend && (

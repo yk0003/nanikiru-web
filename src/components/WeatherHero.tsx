@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { WeatherHeader } from "@/components/WeatherHeader";
 import { TODAY_LABEL, getCity } from "@/lib/mock";
+import { weatherAttribution, type WeatherSource } from "@/lib/weather";
+import type { Weather } from "@/lib/types";
 
 // トップのヒーロー左カラム: キャッチコピー + 天気カード + 主要導線。
-// トップの主役は「今日の天気 + 現地の服装フィード」。地図はその補助。
-export function WeatherHero() {
-  const tokyo = getCity("tokyo")!;
+// 天気はサーバー側でOpen-Meteoから取得したものをpropsで受け取る（失敗時はモック）。
+export function WeatherHero({
+  weather,
+  source = "mock",
+}: {
+  weather?: Weather;
+  source?: WeatherSource;
+}) {
+  const displayWeather = weather ?? getCity("tokyo")!.weather;
 
   return (
     <div className="space-y-5">
@@ -20,7 +28,10 @@ export function WeatherHero() {
         </p>
       </div>
 
-      <WeatherHeader placeLabel="東京・渋谷" dateLabel={TODAY_LABEL} weather={tokyo.weather} />
+      <div>
+        <WeatherHeader placeLabel="東京・渋谷" dateLabel={TODAY_LABEL} weather={displayWeather} />
+        <p className="mt-1.5 text-right text-[11px] text-sub/80">{weatherAttribution(source)}</p>
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <a
