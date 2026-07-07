@@ -48,7 +48,7 @@ export function HeroMapPreview() {
             key={c.slug}
             type="button"
             onClick={() => setCitySlug(c.slug)}
-            className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs font-bold shadow-md transition hover:scale-105 ${
+            className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold shadow-md transition hover:scale-105 ${
               selected ? "bg-sky text-white ring-2 ring-white" : "bg-white"
             }`}
             style={{ left: `${pos.x}%`, top: `${pos.y - 8}%` }}

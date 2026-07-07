@@ -14,7 +14,7 @@ export const CITY_POS: Record<string, { x: number; y: number }> = {
   kyoto: { x: 69, y: 52 },
   osaka: { x: 63, y: 60 },
   taipei: { x: 56, y: 70 },
-  honolulu: { x: 90, y: 68 },
+  honolulu: { x: 82, y: 74 },
 };
 
 const AREA_POS: Record<string, Record<string, { x: number; y: number }>> = {
@@ -129,7 +129,7 @@ export function MapPreview({
                 key={c.slug}
                 type="button"
                 onClick={() => onSelectCity(c.slug)}
-                className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white px-3 py-1.5 text-xs font-bold shadow-md transition hover:scale-105"
+                className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-xs font-bold shadow-md transition hover:scale-105"
                 style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
               >
                 {kind.emoji} {c.name}
@@ -147,7 +147,7 @@ export function MapPreview({
                 key={a.slug}
                 type="button"
                 onClick={() => onSelectArea(city.slug, a.slug)}
-                className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-md transition hover:scale-105 ${
+                className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold shadow-md transition hover:scale-105 ${
                   selected ? "bg-sky text-white ring-2 ring-white" : "bg-white"
                 }`}
                 style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
