@@ -7,8 +7,9 @@ import { OutfitGrid } from "@/components/OutfitGrid";
 import { RelatedLocations } from "@/components/RelatedLocations";
 import { SeoTextBlock } from "@/components/SeoTextBlock";
 import { WeatherSummary } from "@/components/WeatherSummary";
-import { ADS, CITIES, buildOutfitSummary, postsByCity } from "@/lib/mock";
+import { ADS, CITIES, buildOutfitSummary } from "@/lib/mock";
 import { getCityRepo } from "@/lib/repo/locations";
+import { postsByCityRepo } from "@/lib/repo/posts";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import { getWeatherForCity } from "@/lib/weather";
 
@@ -59,7 +60,7 @@ export default async function CityPage({ params }: Props) {
   // Open-Meteoの現在天気（失敗時はモック）。服装メモもこの実データから生成される
   const weather = await getWeatherForCity(city.slug);
 
-  const posts = postsByCity(city.slug);
+  const posts = await postsByCityRepo(city.slug); // DB優先・mockフォールバック
   const topTrend = city.areas.find((a) => a.trend)?.trend;
   const summary = buildOutfitSummary(city.name, weather, topTrend);
   const lead = topTrend

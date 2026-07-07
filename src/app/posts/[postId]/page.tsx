@@ -5,7 +5,8 @@ import { AdBanner } from "@/components/AdCard";
 import { ItemLinkCard } from "@/components/ItemLinkCard";
 import { FeelChip, PhotoPlaceholder, PostCard } from "@/components/PostCard";
 import { EnvChips } from "@/components/WeatherHeader";
-import { ADS, POSTS, getPost, relatedPosts } from "@/lib/mock";
+import { ADS, POSTS } from "@/lib/mock";
+import { getPostRepo, relatedPostsRepo } from "@/lib/repo/posts";
 
 // 投稿詳細。主役は「この場所・この気温で、この服を着てどう感じたか」＝体感メモ。
 
@@ -17,7 +18,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { postId } = await params;
-  const post = getPost(postId);
+  const post = await getPostRepo(postId); // DB優先・mockフォールバック
   if (!post) return {};
   return {
     title: `${post.areaName}の今日の服装（${Math.round(post.weather.tempC)}℃・${post.outfitTags.slice(0, 2).join("・")}）`,
@@ -27,10 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostDetailPage({ params }: Props) {
   const { postId } = await params;
-  const post = getPost(postId);
+  const post = await getPostRepo(postId); // DB優先・mockフォールバック
   if (!post) notFound();
 
-  const related = relatedPosts(post);
+  const related = await relatedPostsRepo(post);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

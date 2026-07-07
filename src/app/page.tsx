@@ -3,7 +3,8 @@ import { HeroMapPreview } from "@/components/HeroMapPreview";
 import { LocationCards } from "@/components/LocationCards";
 import { PostGrid } from "@/components/PostGrid";
 import { WeatherHero } from "@/components/WeatherHero";
-import { CITIES, POSTS } from "@/lib/mock";
+import { CITIES } from "@/lib/mock";
+import { postsByCityRepo } from "@/lib/repo/posts";
 import { getCityWeatherMap, getWeatherForArea } from "@/lib/weather";
 
 // トップ = 「今日の天気 + 現地の服装フィード」が主役。
@@ -11,9 +12,10 @@ import { getCityWeatherMap, getWeatherForArea } from "@/lib/weather";
 // スマホ: 地図は大きく出さず、フィードの後に小さな「地図で探す」導線カードを置く。
 // 天気はOpen-Meteoの現在値（30分キャッシュ）。取得失敗時はモックにfallback。
 export default async function HomePage() {
-  const [shibuyaWeather, cityWeathers] = await Promise.all([
+  const [shibuyaWeather, cityWeathers, tokyoPosts] = await Promise.all([
     getWeatherForArea("tokyo", "shibuya"),
     getCityWeatherMap(),
+    postsByCityRepo("tokyo"), // DB優先・mockフォールバック
   ]);
 
   return (
@@ -51,7 +53,7 @@ export default async function HomePage() {
             もっと見る
           </Link>
         </div>
-        <PostGrid posts={POSTS.filter((p) => p.citySlug === "tokyo")} />
+        <PostGrid posts={tokyoPosts} />
       </section>
 
       {/* スマホ用の地図導線カード（PCはヒーローに地図があるため非表示） */}

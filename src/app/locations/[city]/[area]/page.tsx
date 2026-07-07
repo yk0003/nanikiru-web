@@ -7,8 +7,9 @@ import { OutfitGrid } from "@/components/OutfitGrid";
 import { RelatedLocations } from "@/components/RelatedLocations";
 import { SeoTextBlock } from "@/components/SeoTextBlock";
 import { WeatherSummary } from "@/components/WeatherSummary";
-import { ADS, CITIES, buildOutfitSummary, postsByArea } from "@/lib/mock";
+import { ADS, CITIES, buildOutfitSummary } from "@/lib/mock";
 import { getAreaRepo, getCityRepo } from "@/lib/repo/locations";
+import { postsByCityRepo } from "@/lib/repo/posts";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import { getWeatherForArea } from "@/lib/weather";
 
@@ -64,7 +65,9 @@ export default async function AreaPage({ params }: Props) {
   // Open-Meteoの現在天気（エリア代表点。失敗時はモック）。服装メモもこの実データから生成される
   const weather = await getWeatherForArea(citySlug, areaSlug);
 
-  const posts = postsByArea(citySlug, areaSlug);
+  // 都市の投稿を1回で取得し、エリア絞り込みと「近くのエリア候補」の両方に使う（DB優先・mockフォールバック）
+  const cityPosts = await postsByCityRepo(citySlug);
+  const posts = cityPosts.filter((p) => p.areaSlug === areaSlug);
   const summary = buildOutfitSummary(area.name, weather, area.trend);
   const lead =
     posts.length > 0 && area.trend
@@ -73,7 +76,7 @@ export default async function AreaPage({ params }: Props) {
 
   // 同じ都市で実際に投稿があるエリア（空状態の「近くのエリア候補」用）
   const nearbyAreas = city.areas
-    .filter((a) => a.slug !== areaSlug && postsByArea(citySlug, a.slug).length > 0)
+    .filter((a) => a.slug !== areaSlug && cityPosts.some((p) => p.areaSlug === a.slug))
     .slice(0, 4);
 
   const jsonLd = breadcrumbJsonLd([
