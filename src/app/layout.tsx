@@ -1,19 +1,32 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   // OG画像URL・canonical等の相対パスをNEXT_PUBLIC_SITE_URL基準で解決する
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "NANIKIRU | 天気予報よりリアル。現地の今日の服装を見る",
-    template: "%s | NANIKIRU",
+    default: SITE_TITLE,
+    template: "%s｜NANIKIRU",
   },
-  description:
-    "NANIKIRU（ナニキル）は、旅行先や現在地の「今日なにを着ればいいか」を、現地の人のリアルな服装投稿・気温・天気・体感メモから判断できるサービスです。",
+  description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
+  // サイト全体のOGPデフォルト（og:imageは app/opengraph-image.tsx が自動で付与される）
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    siteName: "NANIKIRU",
+    url: "/",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

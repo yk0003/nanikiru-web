@@ -23,10 +23,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { city: citySlug } = await params;
   const city = getCity(citySlug);
   if (!city) return {};
+
+  const title = `${city.name}の今日の服装`;
+  const description = `${city.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(city.weather.tempC)}℃・体感${Math.round(city.weather.feelsLikeC)}℃。半袖で寒くないか、夜に羽織りが必要かを体感メモで確認できます。`;
+  const path = `/locations/${city.slug}`;
+
   return {
-    title: `${city.name}の今日の服装`,
-    description: `${city.name}の今日の気温・天気・現地のリアルな服装投稿をチェック。現在${Math.round(city.weather.tempC)}℃・体感${Math.round(city.weather.feelsLikeC)}℃。半袖で寒くないか、夜に羽織りが必要かを体感メモで確認できます。`,
-    alternates: { canonical: `/locations/${city.slug}` },
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      locale: "ja_JP",
+      siteName: "NANIKIRU",
+      url: path,
+      title: `${title}｜NANIKIRU`,
+      description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title}｜NANIKIRU`,
+      description,
+    },
   };
 }
 
