@@ -7,15 +7,91 @@ import { WEATHER_KINDS } from "@/lib/types";
 // 都市ピン → タップでその都市のエリアピンに切り替わる2段階構成。
 // 位置はざっくりの相対配置。正確な座標・住所は扱わない。
 
+// 都市ピンの相対位置（実際の地理関係にざっくり合わせる。正確な座標ではない）
 export const CITY_POS: Record<string, { x: number; y: number }> = {
-  paris: { x: 12, y: 28 },
-  seoul: { x: 56, y: 34 },
-  tokyo: { x: 80, y: 42 },
-  kyoto: { x: 69, y: 52 },
-  osaka: { x: 63, y: 60 },
-  taipei: { x: 56, y: 70 },
-  honolulu: { x: 82, y: 74 },
+  paris: { x: 11, y: 24 },
+  seoul: { x: 59, y: 36 },
+  tokyo: { x: 79, y: 44 },
+  kyoto: { x: 70, y: 49 },
+  osaka: { x: 67, y: 56 },
+  taipei: { x: 58, y: 68 },
+  honolulu: { x: 84, y: 76 },
 };
+
+// 地図風の背景シェイプ（本物の地図APIは使わない）。
+// 大陸・列島・島をうっすら描いて「服装の気候マップ」の雰囲気だけ出す。
+// インラインSVGなので外部リクエストなし・軽量。
+export function MapBackdrop({ variant }: { variant: "world" | "city" }) {
+  const land = "rgba(140,207,193,0.22)";
+  const landStrong = "rgba(140,207,193,0.28)";
+  const coast = "rgba(120,183,208,0.30)";
+
+  return (
+    <svg
+      className="absolute inset-0 h-full w-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      {variant === "world" ? (
+        <>
+          {/* ユーラシア大陸（パリ〜朝鮮半島のあたり） */}
+          <path
+            d="M -5 18 Q 12 8 28 14 Q 44 9 54 19 Q 64 23 61 32 Q 57 39 48 41 Q 36 51 22 45 Q 8 48 -5 40 Z"
+            fill={land}
+            stroke={coast}
+            strokeWidth="0.4"
+          />
+          {/* 朝鮮半島 */}
+          <path d="M 57 30 Q 61 32 59.5 38 Q 58 43 55 41 Q 55.5 34 57 30 Z" fill={landStrong} />
+          {/* 日本列島の弧（大阪→京都→東京） */}
+          <path
+            d="M 64 60 Q 69 52 75 47 Q 81 41 85 34 Q 87.5 36 84 43 Q 79 50 72 56 Q 67 61 64 60 Z"
+            fill={landStrong}
+            stroke={coast}
+            strokeWidth="0.4"
+          />
+          {/* 台湾 */}
+          <ellipse cx="58" cy="70" rx="1.9" ry="3.1" fill={landStrong} />
+          {/* ハワイ諸島 */}
+          <circle cx="83" cy="78" r="1.1" fill={landStrong} />
+          <circle cx="86.5" cy="75.5" r="0.8" fill={landStrong} />
+          <circle cx="89" cy="73.5" r="0.5" fill={landStrong} />
+        </>
+      ) : (
+        <>
+          {/* 市街地っぽい大きな面 */}
+          <path
+            d="M 8 30 Q 25 12 50 16 Q 78 10 90 32 Q 98 55 84 74 Q 65 92 40 86 Q 14 82 8 60 Q 4 44 8 30 Z"
+            fill="rgba(140,207,193,0.14)"
+            stroke={coast}
+            strokeWidth="0.4"
+          />
+          {/* 川 */}
+          <path
+            d="M -5 62 Q 22 52 48 60 Q 74 68 105 58"
+            fill="none"
+            stroke="rgba(120,183,208,0.30)"
+            strokeWidth="1.6"
+          />
+          {/* 大通りっぽい線 */}
+          <path
+            d="M 30 -5 Q 44 40 36 105"
+            fill="none"
+            stroke="rgba(255,255,255,0.55)"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M -5 34 Q 45 30 105 40"
+            fill="none"
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth="0.9"
+          />
+        </>
+      )}
+    </svg>
+  );
+}
 
 const AREA_POS: Record<string, Record<string, { x: number; y: number }>> = {
   tokyo: {
@@ -93,6 +169,9 @@ export function MapPreview({
           "linear-gradient(135deg, rgba(120,183,208,0.16), rgba(250,248,243,0.9) 45%, rgba(140,207,193,0.18))",
       }}
     >
+      {/* 地図風の背景シェイプ */}
+      <MapBackdrop variant={city ? "city" : "world"} />
+
       {/* ドット模様（旅行マップの雰囲気） */}
       <div
         className="absolute inset-0"

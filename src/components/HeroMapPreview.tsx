@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CITY_POS } from "@/components/MapPreview";
+import { CITY_POS, MapBackdrop } from "@/components/MapPreview";
 import { CITIES } from "@/lib/mock";
 import { WEATHER_KINDS } from "@/lib/types";
 
@@ -25,6 +25,9 @@ export function HeroMapPreview() {
           "linear-gradient(135deg, rgba(120,183,208,0.16), rgba(250,248,243,0.9) 45%, rgba(140,207,193,0.18))",
       }}
     >
+      {/* 地図風の背景シェイプ */}
+      <MapBackdrop variant="world" />
+
       {/* ドット模様（旅行マップの雰囲気） */}
       <div
         className="absolute inset-0"
