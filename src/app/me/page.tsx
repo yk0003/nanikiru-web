@@ -1,18 +1,13 @@
 import Link from "next/link";
+import { ensureOwnProfile, resolveDisplayName } from "@/lib/repo/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "マイページ" };
 
 // マイページ。ユーザー固有ページなのでここだけ動的レンダリング（cookieでセッション判定）。
 // 未ログイン → ログイン導線 / ログイン済み → プロフィール簡易表示。
+// 表示名は profiles.display_name を正とする（行が無ければ自己修復で作成）。
 export const dynamic = "force-dynamic";
-
-interface Profile {
-  display_name: string;
-  bio: string | null;
-  is_creator: boolean;
-  created_at: string;
-}
 
 export default async function MePage() {
   const supabase = await getSupabaseServerClient();
@@ -41,14 +36,9 @@ export default async function MePage() {
     );
   }
 
-  // プロフィール取得（サインアップトリガーで自動作成済みのはず。念のためfallback表示も用意）
-  const { data: profile } = (await supabase!
-    .from("profiles")
-    .select("display_name, bio, is_creator, created_at")
-    .eq("id", user.id)
-    .single()) as { data: Profile | null };
-
-  const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "ゲスト";
+  // プロフィール取得（profiles.display_nameが正。行が無ければ自己修復で作成）
+  const profile = await ensureOwnProfile(supabase!, user);
+  const displayName = resolveDisplayName(profile, user);
   const joinedAt = profile?.created_at
     ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(new Date(profile.created_at))
     : null;
