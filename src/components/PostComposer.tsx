@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { createPost } from "@/app/compose/actions";
 import { AreaSearch, type AreaSelection } from "@/components/AreaSearch";
 import { Chip, ChipGroup } from "@/components/ChipGroup";
 import { ItemLinkCard } from "@/components/ItemLinkCard";
@@ -10,7 +11,9 @@ import { CITIES } from "@/lib/mock";
 import { FEEL_TAGS, type FeelTag, type ItemLink } from "@/lib/types";
 
 // 投稿作成フォーム本体。「今日の服装メモを残す」感覚で30秒で投稿できることを目指す。
-// MVP: 写真・投稿・Creator状態はモック。フェーズ2でSupabase（Storage / posts / item_links）に接続する。
+// canPost=true（ログイン済み+Supabase接続済み）ならServer Action経由でDB保存し、
+// 成功時はそのエリアページへ遷移する。canPost=falseは従来のモック動作。
+// 写真アップロードはフェーズ8（Storage）で対応（現在は体感タグ色のプレースホルダー）。
 
 const OUTFIT_TAGS = [
   "半袖", "長袖", "シャツ", "ジャケット", "コート", "ニット",
@@ -27,7 +30,13 @@ function SectionCard({ title, children }: { title?: string; children: React.Reac
   );
 }
 
-export function PostComposer({ initialArea }: { initialArea: AreaSelection }) {
+export function PostComposer({
+  initialArea,
+  canPost = false,
+}: {
+  initialArea: AreaSelection;
+  canPost?: boolean;
+}) {
   const [photoAdded, setPhotoAdded] = useState(false);
   const [area, setArea] = useState<AreaSelection>(initialArea);
   const [feel, setFeel] = useState<FeelTag>("comfortable");
@@ -40,6 +49,8 @@ export function PostComposer({ initialArea }: { initialArea: AreaSelection }) {
   const [linkCategory, setLinkCategory] = useState("");
   const [linkLabel, setLinkLabel] = useState("着用");
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   // 選択エリアの天気（未登録エリアは東京の天気を仮表示）
   const weather = (CITIES.find((c) => c.slug === area.citySlug) ?? CITIES[0]).weather;
@@ -72,6 +83,42 @@ export function PostComposer({ initialArea }: { initialArea: AreaSelection }) {
     setLinkCategory("");
     setLinkLabel("着用");
   };
+
+  // 投稿処理: canPost=true → Server ActionでDB保存（成功時はエリアページへredirectされる）
+  //           canPost=false → 従来のモック完了表示
+  function handleSubmit() {
+    if (!photoAdded || pending) return;
+
+    if (!canPost) {
+      setSubmitted(true);
+      return;
+    }
+
+    // クライアント側の事前チェック（Server Action側でも再検証される）
+    if (/https?:\/\//i.test(comment)) {
+      setSubmitError(
+        "本文にURLは入れられません。商品リンクはCreatorプランのアイテムリンク欄で追加できます。"
+      );
+      return;
+    }
+    if (area.citySlug === "custom") {
+      setSubmitError("候補にあるエリアを選んでください（新しいエリアの登録は準備中です）。");
+      return;
+    }
+
+    setSubmitError(null);
+    startTransition(async () => {
+      const result = await createPost({
+        citySlug: area.citySlug,
+        areaSlug: area.areaSlug,
+        feeling: feel,
+        comment,
+        tags: [...tags],
+      });
+      // 成功時はredirectされるため、ここに来るのはエラー時のみ
+      if (result?.error) setSubmitError(result.error);
+    });
+  }
 
   if (submitted) {
     return (
@@ -260,13 +307,16 @@ export function PostComposer({ initialArea }: { initialArea: AreaSelection }) {
 
       {/* 8. 投稿ボタン */}
       <div className="pb-8">
+        {submitError && (
+          <p className="mb-3 rounded-xl bg-[#FAE7DA] p-3 text-sm text-[#B05A25]">{submitError}</p>
+        )}
         <button
           type="button"
-          onClick={() => photoAdded && setSubmitted(true)}
-          disabled={!photoAdded}
+          onClick={handleSubmit}
+          disabled={!photoAdded || pending}
           className="w-full rounded-2xl bg-sky py-4 text-lg font-bold text-white transition hover:opacity-90 disabled:opacity-40"
         >
-          投稿する
+          {pending ? "投稿中…" : "投稿する"}
         </button>
         {!photoAdded && (
           <p className="mt-2 text-center text-xs text-sub">写真を追加すると投稿できます</p>

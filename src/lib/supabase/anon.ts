@@ -17,8 +17,12 @@ export function getSupabaseAnonClient(): SupabaseClient | null {
     anonClient = createClient(config.url, config.anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
       global: {
+        // "supabase"タグ付きでキャッシュ。投稿作成時に revalidateTag("supabase") で即時反映できる
         fetch: (url, init) =>
-          fetch(url, { ...init, next: { revalidate: REVALIDATE_SECONDS } } as RequestInit),
+          fetch(url, {
+            ...init,
+            next: { revalidate: REVALIDATE_SECONDS, tags: ["supabase"] },
+          } as RequestInit),
       },
     });
   }
